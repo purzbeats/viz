@@ -14,6 +14,10 @@ const customPresets: Record<string, object> = {};
 let allPresetKeys: string[] = Object.keys(builtInPresets).sort();
 let currentPresetIndex = 0;
 
+// Display mode
+let letterboxMode = false;
+const CRT_ASPECT = 4 / 3;
+
 function getAllPresets(): Record<string, object> {
   return { ...builtInPresets, ...customPresets };
 }
@@ -92,6 +96,46 @@ function prevPreset(): void {
 
 function randomPreset(): void {
   loadPreset(Math.floor(Math.random() * allPresetKeys.length));
+}
+
+// Canvas sizing
+function updateCanvasSize(): void {
+  if (letterboxMode) {
+    // Calculate largest 4:3 rect that fits in viewport
+    const viewW = window.innerWidth;
+    const viewH = window.innerHeight;
+    const viewAspect = viewW / viewH;
+
+    let w: number, h: number;
+    if (viewAspect > CRT_ASPECT) {
+      // Viewport is wider than 4:3, constrain by height
+      h = viewH;
+      w = Math.floor(h * CRT_ASPECT);
+    } else {
+      // Viewport is taller than 4:3, constrain by width
+      w = viewW;
+      h = Math.floor(w / CRT_ASPECT);
+    }
+
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    canvas.classList.add('letterbox');
+  } else {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.width = '';
+    canvas.style.height = '';
+    canvas.classList.remove('letterbox');
+  }
+
+  visualizer?.setRendererSize(canvas.width, canvas.height);
+}
+
+function toggleLetterbox(): void {
+  letterboxMode = !letterboxMode;
+  updateCanvasSize();
 }
 
 // Render the preset list
@@ -309,6 +353,9 @@ document.addEventListener('keydown', (e) => {
     case 'r':
       randomPreset();
       break;
+    case 'c':
+      toggleLetterbox();
+      break;
     case 'h':
       ui.classList.toggle('hidden');
       break;
@@ -319,11 +366,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Resize handling
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  visualizer?.setRendererSize(canvas.width, canvas.height);
-});
+window.addEventListener('resize', updateCanvasSize);
 
 // Animation loop
 function animate(): void {

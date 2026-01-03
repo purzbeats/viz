@@ -21,6 +21,14 @@
         width: 100%;
         height: 100%;
       }
+      canvas.letterbox {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        height: auto;
+      }
       body.drag-over::after {
         content: 'Drop .milk or audio files';
         position: fixed;
@@ -267,7 +275,7 @@
       </div>
       <div id="controls-hint">
         ← → Space: Navigate | R: Random | H: Hide UI<br>
-        Drag & drop .milk files or audio
+        C: Toggle 4:3 CRT mode | Drag & drop .milk/audio
       </div>
     </div>
     <button id="toggle-ui">☰</button>

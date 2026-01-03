@@ -6,6 +6,7 @@ let visualizer: ReturnType<typeof butterchurn.createVisualizer> | null = null;
 let audioContext: AudioContext | null = null;
 let sourceNode: AudioNode | null = null;
 let audioElement: HTMLAudioElement | null = null;
+let gainNode: GainNode | null = null;
 
 // Preset management
 const builtInPresets = butterchurnPresets.getPresets();
@@ -37,10 +38,17 @@ const statusEl = document.getElementById('status') as HTMLElement;
 const presetSearch = document.getElementById('preset-search') as HTMLInputElement;
 const presetList = document.getElementById('preset-list') as HTMLElement;
 const presetCount = document.getElementById('preset-count') as HTMLElement;
+const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
+const volumeValue = document.getElementById('volume-value') as HTMLElement;
 
 // Initialize Butterchurn
 async function initButterchurn(): Promise<void> {
   audioContext = new AudioContext();
+
+  // Create gain node for volume control
+  gainNode = audioContext.createGain();
+  gainNode.connect(audioContext.destination);
+  gainNode.gain.value = parseInt(volumeSlider.value) / 100;
 
   visualizer = butterchurn.createVisualizer(audioContext, canvas, {
     width: canvas.width,
@@ -184,7 +192,7 @@ async function loadAudioFile(file: File): Promise<void> {
   audioElement.loop = true;
 
   const source = audioContext!.createMediaElementSource(audioElement);
-  source.connect(audioContext!.destination);
+  source.connect(gainNode!);
   sourceNode = source;
 
   visualizer?.connectAudio(source);
@@ -235,6 +243,14 @@ milkInput?.addEventListener('change', async (e) => {
 
 presetSearch.addEventListener('input', (e) => {
   renderPresetList((e.target as HTMLInputElement).value);
+});
+
+volumeSlider.addEventListener('input', (e) => {
+  const value = parseInt((e.target as HTMLInputElement).value);
+  volumeValue.textContent = `${value}%`;
+  if (gainNode) {
+    gainNode.gain.value = value / 100;
+  }
 });
 
 // Drag & drop for .milk files

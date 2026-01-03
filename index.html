@@ -163,6 +163,56 @@
         margin-top: 10px;
         line-height: 1.6;
       }
+      #volume-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+      #volume-control label {
+        font-size: 12px;
+        opacity: 0.7;
+        min-width: 50px;
+      }
+      #volume-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+      #volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+      #volume-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
+      #volume-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      #volume-value {
+        font-size: 12px;
+        opacity: 0.7;
+        min-width: 35px;
+        text-align: right;
+      }
       #toggle-ui {
         position: fixed;
         top: 20px;
@@ -205,6 +255,11 @@
       <div id="preset-list"></div>
 
       <div id="status">Select an audio source to begin</div>
+      <div id="volume-control">
+        <label>Volume</label>
+        <input type="range" id="volume-slider" min="0" max="100" value="75" />
+        <span id="volume-value">75%</span>
+      </div>
       <div id="controls-hint">
         ← → Space: Navigate | R: Random | H: Hide UI<br>
         Drag & drop .milk files or audio

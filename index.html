@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VIZ - Milkdrop Visualizer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      body.drag-over::after {
+        content: 'Drop .milk or audio files';
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 24px;
+        color: #fff;
+        z-index: 1000;
+        pointer-events: none;
+      }
+      #ui {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 320px;
+        z-index: 100;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        color: #fff;
+        user-select: none;
+        background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 80%, transparent 100%);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease;
+      }
+      #ui.hidden {
+        transform: translateX(-100%);
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 300;
+        margin-bottom: 5px;
+        letter-spacing: 4px;
+      }
+      #preset-count {
+        font-size: 11px;
+        opacity: 0.5;
+        margin-bottom: 20px;
+      }
+      #ui button {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+        padding: 10px 16px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+      #ui button:hover {
+        background: rgba(255,255,255,0.2);
+      }
+      #ui button.active {
+        background: rgba(255,255,255,0.3);
+        border-color: #fff;
+      }
+      .button-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .button-row button {
+        flex: 1;
+        margin: 0 !important;
+      }
+      #file-input, #milk-input {
+        display: none;
+      }
+      #preset-search {
+        width: 100%;
+        padding: 10px 12px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 4px;
+        color: #fff;
+        font-size: 14px;
+        margin-bottom: 10px;
+        outline: none;
+      }
+      #preset-search:focus {
+        border-color: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.15);
+      }
+      #preset-search::placeholder {
+        color: rgba(255,255,255,0.5);
+      }
+      #preset-list {
+        flex: 1;
+        overflow-y: auto;
+        margin: 0 -10px;
+        padding: 0 10px;
+      }
+      #preset-list::-webkit-scrollbar {
+        width: 6px;
+      }
+      #preset-list::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.05);
+      }
+      #preset-list::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.2);
+        border-radius: 3px;
+      }
+      .preset-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: background 0.15s;
+      }
+      .preset-item:hover {
+        background: rgba(255,255,255,0.1);
+      }
+      .preset-item.active {
+        background: rgba(255,255,255,0.2);
+        font-weight: 500;
+      }
+      .preset-item.custom {
+        border-left: 2px solid #0ff;
+      }
+      #status {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+      #controls-hint {
+        font-size: 11px;
+        opacity: 0.5;
+        margin-top: 10px;
+        line-height: 1.6;
+      }
+      #toggle-ui {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 101;
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 18px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      #ui.hidden ~ #toggle-ui {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ui">
+      <h1>VIZ</h1>
+      <div id="preset-count">Loading...</div>
+
+      <div class="button-row">
+        <button id="mic-btn">Microphone</button>
+        <button id="file-btn">Audio File</button>
+      </div>
+      <div class="button-row">
+        <button id="milk-btn">Load .milk Presets</button>
+      </div>
+
+      <input type="file" id="file-input" accept="audio/*" />
+      <input type="file" id="milk-input" accept=".milk" multiple />
+
+      <input type="text" id="preset-search" placeholder="Search presets..." />
+      <div id="preset-list"></div>
+
+      <div id="status">Select an audio source to begin</div>
+      <div id="controls-hint">
+        ← → Space: Navigate | R: Random | H: Hide UI<br>
+        Drag & drop .milk files or audio
+      </div>
+    </div>
+    <button id="toggle-ui">☰</button>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
